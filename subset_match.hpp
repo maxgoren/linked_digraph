@@ -1,6 +1,7 @@
 #ifndef subset_match_hpp
 #define subset_match_hpp
 #include <iostream>
+#include "compiler.hpp"
 #include "composable.hpp"
 #include <set>
 using namespace std;

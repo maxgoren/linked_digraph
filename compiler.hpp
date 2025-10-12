@@ -7,6 +7,15 @@
 #include "composable.hpp"
 using namespace std;
 
+NFAState arena[255];
+int nf = 0;
+
+NFAState* makeState(int label) {
+    NFAState* ns = &arena[nf++];
+    ns->label = label;
+    return ns;
+}
+
 
 template <class T>
 struct Stack : public stack<T> {
@@ -24,8 +33,8 @@ int nextLabel() {
 
 NFA makeAtomic(char ch) {
     NFA nfa;
-    NFAState* ns = new NFAState(nextLabel());
-    NFAState* ts = new NFAState(nextLabel());
+    NFAState* ns = makeState(nextLabel());
+    NFAState* ts = makeState(nextLabel());
     ns->addTransition(Transition(ch, ts));
     nfa.start = ns;
     nfa.accept = ts;
@@ -34,8 +43,8 @@ NFA makeAtomic(char ch) {
 
 NFA makeCharClass(string ccl) {
     NFA nfa;
-    NFAState* ns = new NFAState(nextLabel());
-    NFAState* ts = new NFAState(nextLabel());
+    NFAState* ns = makeState(nextLabel());
+    NFAState* ts = makeState(nextLabel());
     for (int i = 0; i < ccl.length(); ) {
         if (i+2 < ccl.length() && ccl[i+1] == '-') {
             char lo = ccl[i];
@@ -56,8 +65,8 @@ NFA makeCharClass(string ccl) {
 // "The empty string"
 NFA makeEpsilonAtomic() {
     NFA nfa;
-    NFAState* ns = new NFAState(nextLabel());
-    NFAState* ts = new NFAState(nextLabel());
+    NFAState* ns = makeState(nextLabel());
+    NFAState* ts = makeState(nextLabel());
     ns->addTransition(Transition(ts));
     nfa.start = ns;
     nfa.accept = ts;
@@ -72,8 +81,8 @@ NFA makeConcat(NFA a, NFA b) {
 
 NFA makeAlternate(NFA a, NFA b) {
     NFA nfa;
-    NFAState* ns = new NFAState(nextLabel());
-    NFAState* ts = new NFAState(nextLabel());
+    NFAState* ns = makeState(nextLabel());
+    NFAState* ts = makeState(nextLabel());
     ns->addTransition(Transition(a.start));
     ns->addTransition(Transition(b.start));
     a.accept->addTransition(Transition(ts));
@@ -85,8 +94,8 @@ NFA makeAlternate(NFA a, NFA b) {
 
 NFA makeKleene(NFA a, bool must) {
     NFA nfa;
-    NFAState* ns = new NFAState(nextLabel());
-    NFAState* ts = new NFAState(nextLabel());
+    NFAState* ns = makeState(nextLabel());
+    NFAState* ts = makeState(nextLabel());
     ns->addTransition(Transition(a.start));
     if (!must)
         ns->addTransition(Transition(ts));
