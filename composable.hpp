@@ -26,6 +26,13 @@ struct NFAState {
     vector<Transition> transitions;
     NFAState(State st = -1) : label(st) { }
     ~NFAState() {    }
+    bool hasTransition(Transition t) {
+        for (auto e : transitions) {
+            if (e.ch == t.ch && e.dest == t.dest)
+                return true;
+        }
+        return false;
+    }
     void addTransition(Transition t) {
         transitions.push_back(t);
     }

@@ -45,17 +45,39 @@ NFA makeCharClass(string ccl) {
     NFA nfa;
     NFAState* ns = makeState(nextLabel());
     NFAState* ts = makeState(nextLabel());
-    for (int i = 0; i < ccl.length(); ) {
+    int i = 0; bool negate = false;
+    if (ccl[0] == '^') {
+        negate = true; 
+        i++;
+    }
+    while (i < ccl.length()) {
         if (i+2 < ccl.length() && ccl[i+1] == '-') {
-            char lo = ccl[i];
-            char hi = ccl[i+2];
-            for (char t = lo; t <= hi; t++)
-                ns->addTransition(Transition(t, ts));
-            i+=2;
+            char lo = ccl[i], hi = ccl[i+2];
+            if (negate) {
+                for (char t = 'A'; t < lo; t++)
+                    ns->addTransition(Transition(t, ts));
+                for (char t = hi+1; t <= '~'; t++)
+                    ns->addTransition(Transition(t, ts));
+                i += 2;
+            } else {
+                cout<<"Eh, nah."<<endl;
+                for (char t = lo; t <= hi; t++)
+                    ns->addTransition(Transition(t, ts));
+                i+=2;
+            }
         } else {
-            ns->addTransition(Transition(ccl[i], ts));
+            if (negate) {
+                for (char t = 'A'; t < '~'; t++) {
+                    if (ccl.find(t) == std::string::npos && !ns->hasTransition(Transition(t, ts))) {
+                        ns->addTransition(Transition(t, ts));
+                    }
+                }
+            } else {
+                ns->addTransition(Transition(ccl[i], ts));
+            }
             i++;
         }
+        cout<<i<<"/"<<ccl.length()<<endl;
     }
     nfa.start = ns;
     nfa.accept = ts;
