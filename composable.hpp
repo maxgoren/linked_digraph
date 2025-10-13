@@ -41,9 +41,7 @@ struct NFAState {
 struct NFA {
     NFAState* start;
     NFAState* accept;
-    NFA() {
-
-    }
+    NFA(NFAState* s = nullptr, NFAState* a = nullptr) : start(s), accept(a) {  }
 };
 
 void printR(NFA& nfa, NFAState* curr, set<pair<char, NFAState*>>& seen, int d) {

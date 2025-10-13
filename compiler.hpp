@@ -32,17 +32,13 @@ int nextLabel() {
 }
 
 NFA makeAtomic(char ch) {
-    NFA nfa;
     NFAState* ns = makeState(nextLabel());
     NFAState* ts = makeState(nextLabel());
     ns->addTransition(Transition(ch, ts));
-    nfa.start = ns;
-    nfa.accept = ts;
-    return nfa;
+    return NFA(ns, ts);
 }
 
 NFA makeCharClass(string ccl) {
-    NFA nfa;
     NFAState* ns = makeState(nextLabel());
     NFAState* ts = makeState(nextLabel());
     int i = 0; bool negate = false;
@@ -79,20 +75,15 @@ NFA makeCharClass(string ccl) {
         }
         cout<<i<<"/"<<ccl.length()<<endl;
     }
-    nfa.start = ns;
-    nfa.accept = ts;
-    return nfa;
+    return NFA(ns, ts);
 }
 
 // "The empty string"
 NFA makeEpsilonAtomic() {
-    NFA nfa;
     NFAState* ns = makeState(nextLabel());
     NFAState* ts = makeState(nextLabel());
     ns->addTransition(Transition(ts));
-    nfa.start = ns;
-    nfa.accept = ts;
-    return nfa;
+    return NFA(ns, ts);
 }
 
 NFA makeConcat(NFA a, NFA b) {
@@ -102,20 +93,16 @@ NFA makeConcat(NFA a, NFA b) {
 }
 
 NFA makeAlternate(NFA a, NFA b) {
-    NFA nfa;
     NFAState* ns = makeState(nextLabel());
     NFAState* ts = makeState(nextLabel());
     ns->addTransition(Transition(a.start));
     ns->addTransition(Transition(b.start));
     a.accept->addTransition(Transition(ts));
     b.accept->addTransition(Transition(ts));
-    nfa.start = ns;
-    nfa.accept = ts;
-    return nfa;
+    return NFA(ns, ts);
 }
 
 NFA makeKleene(NFA a, bool must) {
-    NFA nfa;
     NFAState* ns = makeState(nextLabel());
     NFAState* ts = makeState(nextLabel());
     ns->addTransition(Transition(a.start));
@@ -123,9 +110,7 @@ NFA makeKleene(NFA a, bool must) {
         ns->addTransition(Transition(ts));
     a.accept->addTransition(Transition(ts));
     a.accept->addTransition(Transition(a.start));
-    nfa.start = ns;
-    nfa.accept = ts;
-    return nfa;
+    return NFA(ns, ts);
 }
 
 NFA makeZeorOrOne(NFA a) {
@@ -135,7 +120,6 @@ NFA makeZeorOrOne(NFA a) {
 class Compiler {
     private:
         Stack<NFA> st;
-        NFA nfa;
         void trav(astnode* node) {
             if (node != nullptr) {
                 if (node->type == LITERAL) {

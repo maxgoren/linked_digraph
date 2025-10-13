@@ -51,7 +51,7 @@ class Parser {
             astnode* t;
             if (lookahead() == '(') {
                 match('(');
-                t = expr();
+                t = anchordexprs();
                 match(')');
             } else if (isdigit(lookahead()) || isalpha(lookahead()) || lookahead() == '.') {
                 t = new astnode(lookahead(), 1);
@@ -101,13 +101,34 @@ class Parser {
             }
             return t;
         }
+        astnode* anchordexprs() {
+            astnode* t = nullptr;
+            if (lookahead() == '^') {
+                t = new astnode('^', 2);
+                advance();
+                t->left = expr();
+            } else {
+                t = expr();
+            }
+            if (t != nullptr && lookahead() == '$') {
+                advance();
+                if (t->c == '^')
+                    t->right = new astnode('$', 2);
+                else {
+                    astnode* n = new astnode('$', 2);
+                    n->left = t;
+                    t = n;
+                }
+            }
+            return t;
+        }
     public:
         Parser() {
 
         }
         astnode* parse(string pat) {
             rexpr = pat; pos = 0;
-            return expr();
+            return anchordexprs();
         }
 };
 
