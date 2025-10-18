@@ -7,24 +7,21 @@
 #include "composable.hpp"
 using namespace std;
 
-NFAState arena[255];
+
+//about as simple of an allocator as you can get.
+const int MAX_STATE = 255;
+NFAState arena[MAX_STATE];
 int nf = 0;
 
 NFAState* makeState(int label) {
+    if (nf+1 == MAX_STATE) {
+        cout<<"ERROR: OUT OF MEMORY"<<endl;
+        return nullptr;
+    }
     NFAState* ns = &arena[nf++];
     ns->label = label;
     return ns;
 }
-
-
-template <class T>
-struct Stack : public stack<T> {
-    T pop() {
-        T ret = stack<T>::top();
-        stack<T>::pop();
-        return ret;
-    }
-};
 
 int nextLabel() {
     static int label = 0;
@@ -63,7 +60,7 @@ NFA makeCharClass(string ccl) {
             }
         } else {
             if (negate) {
-                for (char t = 'A'; t < '~'; t++) {
+                for (char t = '0'; t <= '~'; t++) {
                     if (ccl.find(t) == std::string::npos && !ns->hasTransition(Transition(t, ts))) {
                         ns->addTransition(Transition(t, ts));
                     }
@@ -116,6 +113,15 @@ NFA makeKleene(NFA a, bool must) {
 NFA makeZeorOrOne(NFA a) {
     return makeAlternate(a, makeEpsilonAtomic());
 }
+
+template <class T>
+struct Stack : public stack<T> {
+    T pop() {
+        T ret = stack<T>::top();
+        stack<T>::pop();
+        return ret;
+    }
+};
 
 class Compiler {
     private:

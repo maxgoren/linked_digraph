@@ -58,4 +58,11 @@ bool match(NFA& nfa, string text) {
     return states.find(nfa.accept) != states.end();
 }
 
+DFA nfa2dfa(NFA& nfa) {
+    set<NFAState*> states;
+    states.insert(nfa.start);
+    states = e_closure(nfa, states);
+    
+}
+
 #endif
