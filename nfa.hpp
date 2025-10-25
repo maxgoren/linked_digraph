@@ -85,16 +85,4 @@ void BFS(NFA& nfa) {
     }
 }
 
-struct DFAState {
-    int label;
-    int token_id;
-    bool is_accepting;
-    set<int> positions;
-    vector<Transition> trans;
-};
-
-struct DFA {
-    vector<DFAState> states;
-};
-
 #endif

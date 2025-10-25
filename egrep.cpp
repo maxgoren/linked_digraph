@@ -12,12 +12,21 @@ void fromStdIn(string pattern) {
     print(nfa);
     while (fgets(buffer, 1014, stdin)) {
         if (match(nfa, buffer)) {
-            cout<<buffer<<endl;
+            cout<<"Match: "<<buffer<<endl;
         }
     }
 }
 
+void sayHello() {
+    cout<<" mgc-egrep v2.0.0-pre"<<endl;
+    cout<<" (c) 2025 MaxGCoding.com\n"<<endl;
+}
+
 int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        sayHello();
+        return 0;
+    }
     fromStdIn(argv[1]);
     return 0;
 }

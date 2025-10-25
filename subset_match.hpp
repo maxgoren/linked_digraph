@@ -2,11 +2,11 @@
 #define subset_match_hpp
 #include <iostream>
 #include "compiler.hpp"
-#include "composable.hpp"
+#include "nfa.hpp"
 #include <set>
 using namespace std;
 
-set<NFAState*> move(NFA nfa, char ch, set<NFAState*> states) {
+set<NFAState*> move(char ch, set<NFAState*> states) {
     cout<<"Move on: "<<ch<<endl;
     set<NFAState*> next;
     for (NFAState* state : states) {
@@ -23,7 +23,7 @@ set<NFAState*> move(NFA nfa, char ch, set<NFAState*> states) {
     return next;
 }
 
-set<NFAState*> e_closure(NFA nfa, set<NFAState*> states) {
+set<NFAState*> e_closure(set<NFAState*> states) {
     set<NFAState*> next = states;
     Stack<NFAState*> st;
     cout<<"Epsilon closure from: ";
@@ -47,22 +47,26 @@ set<NFAState*> e_closure(NFA nfa, set<NFAState*> states) {
 }
 
 bool match(NFA& nfa, string text) {
-    set<NFAState*> states;
-    states.insert(nfa.start);
-    states = e_closure(nfa, states);
-    for (char c : text) {
-        states = e_closure(nfa, move(nfa, c, states));
-        if (states.find(nfa.accept) != states.end())
-            return true;
+    set<NFAState*> states = {nfa.start};
+    states = e_closure(states);
+    int i = 0;
+    int matchFrom = 0;
+    int matchLen = 0;
+    char c;
+    for (int i = 0; (c = text[i]) != '\0'; i++) {
+        if (states.empty() || c == '\n')
+            return matchLen > 0;
+        states = e_closure(move(c, states));
+        if (states.find(nfa.accept) != states.end()) {
+            cout<<"Match Found: ";
+            for (int t = matchFrom; t <= i; t++) {
+                cout<<text[t];
+            }
+            cout<<endl;
+            matchLen = i - matchFrom;
+        }
     }
     return states.find(nfa.accept) != states.end();
-}
-
-DFA nfa2dfa(NFA& nfa) {
-    set<NFAState*> states;
-    states.insert(nfa.start);
-    states = e_closure(nfa, states);
-    
 }
 
 #endif

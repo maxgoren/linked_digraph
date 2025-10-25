@@ -4,7 +4,7 @@
 #include <vector>
 #include <stack>
 #include "parser.hpp"
-#include "composable.hpp"
+#include "nfa.hpp"
 using namespace std;
 
 
@@ -35,6 +35,31 @@ NFA makeAtomic(char ch) {
     return NFA(ns, ts);
 }
 
+void makeRangeClassTrans(NFAState* ns, NFAState* ts, string ccl, bool negate, int spos) {
+    char lo = ccl[spos], hi = ccl[spos+2];
+    if (!negate) {
+        for (char t = lo; t <= hi; t++)
+            ns->addTransition(Transition(t, ts));
+        return;
+    }
+    for (char t = '0'; t < lo; t++)
+        ns->addTransition(Transition(t, ts));
+    for (char t = hi+1; t <= '~'; t++)
+        ns->addTransition(Transition(t, ts));   
+}
+
+void makeRegClassTrans(NFAState* ns, NFAState* ts, string ccl, bool negate, int spos) {
+    if (!negate) {
+        ns->addTransition(Transition(ccl[spos], ts));
+        return;
+    }
+    for (char t = '0'; t <= '~'; t++) {
+        if (ccl.find(t) == std::string::npos && !ns->hasTransition(Transition(t, ts))) {
+            ns->addTransition(Transition(t, ts));
+        }
+   }
+}
+
 NFA makeCharClass(string ccl) {
     NFAState* ns = makeState(nextLabel());
     NFAState* ts = makeState(nextLabel());
@@ -45,32 +70,12 @@ NFA makeCharClass(string ccl) {
     }
     while (i < ccl.length()) {
         if (i+2 < ccl.length() && ccl[i+1] == '-') {
-            char lo = ccl[i], hi = ccl[i+2];
-            if (negate) {
-                for (char t = 'A'; t < lo; t++)
-                    ns->addTransition(Transition(t, ts));
-                for (char t = hi+1; t <= '~'; t++)
-                    ns->addTransition(Transition(t, ts));
-                i += 2;
-            } else {
-                cout<<"Eh, nah."<<endl;
-                for (char t = lo; t <= hi; t++)
-                    ns->addTransition(Transition(t, ts));
-                i+=2;
-            }
+            makeRangeClassTrans(ns, ts, ccl, negate, i);
+            i += 2;
         } else {
-            if (negate) {
-                for (char t = '0'; t <= '~'; t++) {
-                    if (ccl.find(t) == std::string::npos && !ns->hasTransition(Transition(t, ts))) {
-                        ns->addTransition(Transition(t, ts));
-                    }
-                }
-            } else {
-                ns->addTransition(Transition(ccl[i], ts));
-            }
+            makeRegClassTrans(ns, ts, ccl, negate, i);
             i++;
         }
-        cout<<i<<"/"<<ccl.length()<<endl;
     }
     return NFA(ns, ts);
 }
@@ -129,12 +134,12 @@ class Compiler {
         void trav(astnode* node) {
             if (node != nullptr) {
                 if (node->type == LITERAL) {
-                    cout<<"Character State: "<<node->c<<endl;
+                    cout<<"Making Character State: "<<node->c<<endl;
                     st.push(makeAtomic(node->c));
                 } else if (node->type == CHCLASS) {
                     st.push(makeCharClass(node->ccl));
                 } else {
-                    cout<<"Building: "<<node->c<<endl;
+                    cout<<"Building Operator Machine: "<<node->c<<endl;
                     switch (node->c) {
                         case '|': {
                             trav(node->left);
